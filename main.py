@@ -184,8 +184,9 @@ if __name__ == "__main__":
 
         for start_line, end_line in game.lines:
             TEMP_LINE_COLOR = LINE_COLOR
-            random.seed(start_line.x*start_line.y*end_line.x*end_line.y)
-            TEMP_LINE_COLOR = pygame.Color(random.randint(1,255),random.randint(1,255),random.randint(1,255))
+            if DEBUG:
+                random.seed(start_line.x*start_line.y*end_line.x*end_line.y)
+                TEMP_LINE_COLOR = pygame.Color(random.randint(1,255),random.randint(1,255),random.randint(1,255))
             pygame.draw.line(game.screen, TEMP_LINE_COLOR, start_line, end_line,LINE_THICKNESS)
         
         if game.check_polygon:
