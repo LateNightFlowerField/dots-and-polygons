@@ -77,6 +77,9 @@ class Game():
 def init():
     pygame.init()
     pygame.font.init()
+    gameIcon = pygame.image.load("GameIcon.png")
+    pygame.display.set_icon(gameIcon)
+    pygame.display.set_caption("Dots & Polygons")
     screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
     dots_layer = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT))
     line_layer = pygame.Surface((SCREEN_WIDTH,SCREEN_HEIGHT))
