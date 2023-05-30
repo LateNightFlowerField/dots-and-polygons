@@ -1,7 +1,6 @@
 from functools import cmp_to_key
 import pygame
 import numpy as np
-import time
 from dataclasses import dataclass
 from dataclasses import field
 from typing import Union, List
