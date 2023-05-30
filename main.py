@@ -13,15 +13,15 @@ FRAMERATE = 60
 GAME_WIDTH = 5
 GAME_HEIGHT = 5
 DOT_SPACING = 80
-DOT_RADIUS = 4
+DOT_RADIUS = 6
 DOT_COLOR = pygame.Color(90,20,60,a=255)
 SNAP_RANGE_COLOR = pygame.Color(70,70,70,a=80)
 DOT_NEAR_COLOR = pygame.Color(230,90,180)
 DOT_SLECTED_COLOR = pygame.Color(230,200,180)
 TEMP_LINE_COLOR = pygame.Color(60,10,30)
 MOUSE_SNAP_DISTANCE = DOT_SPACING//2
-LINE_THICKNESS = 3
-LINE_COLOR = pygame.Color(160,100,130)
+LINE_THICKNESS = 5
+LINE_COLOR = pygame.Color(60,100,220)
 DEBUG = False
 
 
@@ -118,6 +118,8 @@ def standerdize_line(line):
     """Sorts line so the points are always in order of distance from (0,0) or the top left"""
     point_1, point_2 = line
     if sum(point_1) < sum(point_2):
+        return (point_1,point_2)
+    elif point_1.x < point_2.x:
         return (point_1,point_2)
     else:
         return (point_2,point_1)
