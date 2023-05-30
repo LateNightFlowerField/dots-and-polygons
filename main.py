@@ -40,10 +40,6 @@ def line_intersection(x1, y1, x2, y2, x3, y3, x4, y4):
         return None
 
 
-"""
-For each new point formed go out to each connected line making only right turns and only left turns. 
-If you have three points in a row which fall on a line abort. If you reach your starting point you have a polygon. Testing git
-"""
 def find_closest_vector(sample_vector,vectors,clockwise):
     vectors.sort(key=lambda c: sample_vector.angle_to(c))
     return vectors #TEMP
