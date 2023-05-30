@@ -94,6 +94,7 @@ def sort_points_by_distance(point_1):
     return lambda point_2: np.sqrt((point_1.x-point_2.x)**2+(point_1.y-point_2.y)**2)
 
 def unique(input_list):
+    """Returns the unique elements of a list"""
     empty_list = []
     for item in input_list:
         if item not in empty_list:
@@ -106,9 +107,11 @@ def check_valid_line(game, point):
     return True
 
 def has_point(point):
+    """Function to be used by filter() to easly check if a line contains a point"""
     return lambda k: point in k
 
 def standerdize_line(line):
+    """Sorts line so the points are always in order of distance from (0,0) or the top left"""
     point_1, point_2 = line
     if sum(point_1) < sum(point_2):
         return (point_1,point_2)
@@ -135,7 +138,7 @@ if __name__ == "__main__":
         game.screen.fill(BACKGROUND_COLOR)
         game.draw_temp_line = True
 
-        for point in game.game_dots:
+        for point in game.game_dots: #TODO seperate into functions
             if point.distance_to(game.mouse_cords) < MOUSE_SNAP_DISTANCE:
                 pygame.draw.circle(game.screen,SNAP_RANGE_COLOR,point,MOUSE_SNAP_DISTANCE)
             if game.add_point:
