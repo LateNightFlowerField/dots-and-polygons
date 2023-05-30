@@ -132,12 +132,13 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 game.running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if game.selected_point:
-                    game.add_line = True
-                    print("Set Add Line Flag")
-                else:
-                    game.add_point = True
-                    print("Set Add Point Flag")
+                if pygame.mouse.get_pressed(num_buttons=3)[0]:
+                    if game.selected_point:
+                        game.add_line = True
+                        print("Set Add Line Flag")
+                    else:
+                        game.add_point = True
+                        print("Set Add Point Flag")
         
         game.screen.fill(BACKGROUND_COLOR)
         game.draw_temp_line = True
