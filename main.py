@@ -22,6 +22,7 @@ TEMP_LINE_COLOR = pygame.Color(60,10,30)
 MOUSE_SNAP_DISTANCE = DOT_SPACING//2
 LINE_THICKNESS = 3
 LINE_COLOR = pygame.Color(160,100,130)
+DEBUG = False
 
 
 #https://stackoverflow.com/a/68924847 This works now after change < 0 to <= 0.
@@ -161,8 +162,6 @@ if __name__ == "__main__":
                             if (u not in zt) and ((u[1],u[0]) not in zt) and (u[0] != u[1]):
                                 zt.append(u)
                         temp_lines = zt
-                        print(temp_lines)
-                        # input()
                         intersections = unique(intersections)
                         intersections.sort(key=sort_points_by_distance(game.selected_point))
                         game.last_line = tuple(intersections[0:2])
@@ -185,7 +184,6 @@ if __name__ == "__main__":
 
         for start_line, end_line in game.lines:
             TEMP_LINE_COLOR = LINE_COLOR
-            print(standerdize_line((start_line,end_line)))
             random.seed(start_line.x*start_line.y*end_line.x*end_line.y)
             TEMP_LINE_COLOR = pygame.Color(random.randint(1,255),random.randint(1,255),random.randint(1,255))
             pygame.draw.line(game.screen, TEMP_LINE_COLOR, start_line, end_line,LINE_THICKNESS)
@@ -208,18 +206,6 @@ if __name__ == "__main__":
                 for line in list(filter(has_point(intersection),game.new_lines)):
                     line = list(line)
                     line.remove(intersection)
-                    # print(line[0]-intersection)
-                    # print(find_closest_vector(line[0],centered_vectors, False))
-            # print(intersections_to_check_from)
-            # for cross in game.new_intersections[1:-1]:
-            #     for line in filter(has_point(cross),game.new_lines):
-            #         ways_to_check.append(line[::-1] if line in ways_to_check else line)
-            # for way in ways_to_check:
-            #     connected_lines = list(filter(has_point(way[0]),game.lines))
-            #     connected_lines = [line for line in connected_lines if line != way and line != (way[1],way[0])]
-
-            #     game.checking_lines = connected_lines
-            #     print(way,list(map(lambda h: [u for u in h if u != way[0]],connected_lines)))
 
             game.check_polygon = False
         for point in game.game_dots:
@@ -242,13 +228,12 @@ if __name__ == "__main__":
         game.add_line = False
         game.add_point = False
 
-        font = pygame.font.Font(None, 64)
-        text = font.render(str(game.mouse_cords), True, (10, 10, 10))
-        game.screen.blit(text, (0,0))
-        text = font.render(str(round(game.clock.get_fps())), True, (5, 5, 5))
-        game.screen.blit(text, (0,40))
-        # print(len(game.lines))
+        if DEBUG:
+            font = pygame.font.Font(None, 64)
+            text = font.render(str(game.mouse_cords), True, (10, 10, 10))
+            game.screen.blit(text, (0,0))
+            text = font.render(str(round(game.clock.get_fps())), True, (5, 5, 5))
+            game.screen.blit(text, (0,40))
         pygame.display.update()
         game.clock.tick(FRAMERATE)
-        # print(game.clock.get_fps())
     pygame.quit()
