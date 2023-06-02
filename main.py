@@ -148,6 +148,22 @@ if __name__ == "__main__":
             if game.add_line:
                 if point.distance_to(game.mouse_cords) < MOUSE_SNAP_DISTANCE and point != game.selected_point:
                     if check_valid_line(game, point):
+                        subtract_lines = [] #Remove part from segement which already exists
+                        intial_line = [(point-game.selected_point).normalize()*(-1),(point-game.selected_point).normalize()]
+                        print(intial_line)
+                        for line in game.lines:
+                            p1, p2 = line
+                            p1 = p1 - game.selected_point
+                            p2 = p2 - game.selected_point
+                            if p1.length() == 0:
+                                p1 = point-game.selected_point
+                            if p2.length() == 0:
+                                p2 = point-game.selected_point
+                            if all([p.normalize() in intial_line for p in [p1,p2]]):
+                                subtract_lines.append(line)
+                        print(subtract_lines, " SUB")
+                        for line in subtract_lines:
+                            pass
                         intersections = [point,game.selected_point]
                         temp_lines = game.lines.copy()
                         for line in game.lines:
@@ -161,7 +177,7 @@ if __name__ == "__main__":
                             if (u not in zt) and ((u[1],u[0]) not in zt) and (u[0] != u[1]):
                                 zt.append(u)
                         temp_lines = zt
-                        print(temp_lines)
+                        # print(temp_lines)
                         # input()
                         intersections = unique(intersections)
                         intersections.sort(key=sort_points_by_distance(game.selected_point))
@@ -185,7 +201,7 @@ if __name__ == "__main__":
 
         for start_line, end_line in game.lines:
             TEMP_LINE_COLOR = LINE_COLOR
-            print(standerdize_line((start_line,end_line)))
+            # print(standerdize_line((start_line,end_line)))
             random.seed(start_line.x*start_line.y*end_line.x*end_line.y)
             TEMP_LINE_COLOR = pygame.Color(random.randint(1,255),random.randint(1,255),random.randint(1,255))
             pygame.draw.line(game.screen, TEMP_LINE_COLOR, start_line, end_line,LINE_THICKNESS)
