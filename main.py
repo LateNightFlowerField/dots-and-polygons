@@ -1,4 +1,5 @@
 from functools import cmp_to_key
+import math
 import pygame as pg
 from pygame import Vector2 as Vec2
 import numpy as np
@@ -9,21 +10,26 @@ import random
 
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 500
-BACKGROUND_COLOR = pg.Color(80,80,80)
+BACKGROUND_COLOR = pg.Color(200,180,200)
 FRAMERATE = 60
 GAME_WIDTH = 5
 GAME_HEIGHT = 5
 DOT_SPACING = 80
 DOT_RADIUS = 4
-DOT_COLOR = pg.Color(90,20,60,a=255)
-SNAP_RANGE_COLOR = pg.Color(70,70,70,a=80)
+DOT_COLOR = pg.Color(100,50,140,a=255)
+SNAP_RANGE_COLOR = pg.Color(pg.Vector3(200,180,180)-pg.Vector3(25))
 DOT_NEAR_COLOR = pg.Color(230,90,180)
 DOT_SLECTED_COLOR = pg.Color(230,200,180)
 TEMP_LINE_COLOR = pg.Color(60,10,30)
 MOUSE_SNAP_DISTANCE = DOT_SPACING//2
 LINE_THICKNESS = 3
-LINE_COLOR = pg.Color(160,100,130)
+LINE_COLOR = pg.Color(10,60,80)
 
+pg.mixer.init()
+
+SELECT_SOUND = pg.mixer.Sound("point_selected.wav")
+LINE_SOUND = pg.mixer.Sound("line_added.wav")
+pg.mixer.music.load("background.wav")
 
 #https://stackoverflow.com/a/68924847 This works now after change < 0 to <= 0.
 def line_intersection(x1, y1, x2, y2, x3, y3, x4, y4):
@@ -118,7 +124,9 @@ def RenderLines():
             pg.draw.line(game.screen,TEMP_LINE_COLOR,game.selected_point,game.mouse_cords,LINE_THICKNESS)
 
     for line in game.lines:
-        pg.draw.line(game.screen,LINE_COLOR, *line, LINE_THICKNESS)
+        random.seed(line[0].magnitude()-line[1].x*line[1].angle())
+        color_local = pg.Color(pg.Vector3(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
+        pg.draw.line(game.screen,color_local, *line, LINE_THICKNESS)
     
 def RenderPoints():
     for point in game.game_dots:
@@ -148,10 +156,15 @@ def AddLine():
             break
     else:
         return False
+    if point1 == point2:
+        return False
     new_lines = [(point1,point2)]
+    if new_lines[0] in game.lines or (point2,point1) in game.lines:
+        return False
     new_lines = SubtractExistingSegments(new_lines)
     # new_lines, updated_game_lines = DivideLines(new_lines)
     game.lines.extend(new_lines)
+    return True
 
 def SubtractExistingSegments(lines):
     addedsegment = lines[0]
@@ -160,8 +173,17 @@ def SubtractExistingSegments(lines):
     for line in game.lines:
         checkline = (Vec2(0.0,0.0),line[1] - line[0])
         if adjustedline[1].normalize() in [checkline[1].normalize(),(checkline[1]*-1).normalize()]:
-            print(line)
-        
+            if (addedsegment[1]-line[1]) == Vec2(0.0,0.0):
+                linesinline.append(line)
+            elif (addedsegment[1]-line[1]).normalize() in [checkline[1].normalize(),(checkline[1]*-1).normalize()]:
+                linesinline.append(line)
+    print(linesinline)
+    for line in linesinline:
+        if line in game.lines:
+            game.lines.remove(line)
+
+    #Order points, from point in bbx new line and no other bbox to next point that is the same.
+    
     return lines
 
 def OnScreenDebugger():
@@ -234,6 +256,7 @@ def point_in_bbox(point, bbox):
 
 if __name__ == "__main__":
     game = init()
+    pg.mixer.music.play(-1)
     while game.running:
         game.screen.fill(BACKGROUND_COLOR)
         game.mouse_cords = pg.mouse.get_pos()
@@ -245,9 +268,12 @@ if __name__ == "__main__":
         for flag in game.flags:
             match flag:
                 case "point":
-                    AddPoint()
+                    if AddPoint():
+                        SELECT_SOUND.play()
                 case "line":
-                    AddLine()
+                    if AddLine():
+                        SELECT_SOUND.play()
+                        LINE_SOUND.play()
                     game.selected_point = None
                 case "polygon":
                     pass
