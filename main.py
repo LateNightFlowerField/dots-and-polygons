@@ -124,9 +124,9 @@ def RenderLines():
             pg.draw.line(game.screen,TEMP_LINE_COLOR,game.selected_point,game.mouse_cords,LINE_THICKNESS)
 
     for line in game.lines:
-        random.seed(line[0].magnitude()-line[1].x*line[1].angle())
-        color_local = pg.Color(pg.Vector3(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
-        pg.draw.line(game.screen,color_local, *line, LINE_THICKNESS)
+        # random.seed(line[0].magnitude()-line[1].x*line[1])
+        # color_local = pg.Color(pg.Vector3(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
+        pg.draw.line(game.screen,LINE_COLOR, *line, LINE_THICKNESS)
     
 def RenderPoints():
     for point in game.game_dots:
@@ -183,7 +183,7 @@ def SubtractExistingSegments(lines):
             game.lines.remove(line)
 
     #Order points, from point in bbx new line and no other bbox to next point that is the same.
-    
+
     return lines
 
 def OnScreenDebugger():
