@@ -162,9 +162,22 @@ def AddLine():
     if new_lines[0] in game.lines or (point2,point1) in game.lines:
         return False
     new_lines = SubtractExistingSegments(new_lines)
-    # new_lines, updated_game_lines = DivideLines(new_lines)
+    new_lines = DivideLines(new_lines)
     game.lines.extend(new_lines)
     return True
+
+def DivideLines(lines):
+    new_lines = []
+    for nline in lines:
+        intersections = [*nline]
+        for line in game.lines:
+            if res := line_intersection(nline[0].x,nline[0].y,nline[1].x,nline[1].y,line[0].x,line[0].y,line[1].x,line[1].y):
+                intersections.append(res)
+        intersections.sort(key=lambda l: l.distance_to(nline[0]))
+        new_lines.extend(list(zip(intersections,intersections[1:])))
+    return new_lines
+                
+
 
 def SubtractExistingSegments(lines):
     addedsegment = lines[0]
