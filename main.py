@@ -124,9 +124,9 @@ def RenderLines():
             pg.draw.line(game.screen,TEMP_LINE_COLOR,game.selected_point,game.mouse_cords,LINE_THICKNESS)
 
     for line in game.lines:
-        # random.seed(line[0].magnitude()-line[1].x*line[1])
-        # color_local = pg.Color(pg.Vector3(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
-        pg.draw.line(game.screen,LINE_COLOR, *line, LINE_THICKNESS)
+        random.seed(line[0].magnitude()*line[1].x)
+        color_local = pg.Color(pg.Vector3(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
+        pg.draw.line(game.screen,color_local, *line, LINE_THICKNESS)
     
 def RenderPoints():
     for point in game.game_dots:
@@ -177,14 +177,58 @@ def SubtractExistingSegments(lines):
                 linesinline.append(line)
             elif (addedsegment[1]-line[1]).normalize() in [checkline[1].normalize(),(checkline[1]*-1).normalize()]:
                 linesinline.append(line)
-    print(linesinline)
+    if not linesinline:
+        return lines 
+    vectorlist = []
     for line in linesinline:
+        vectorlist.extend(line)
+    vectorlist.extend(addedsegment)
+    vectorlist = sorted(vectorlist,key=lambda l: l.distance_to(vectorlist[-1]))
+    vectorlist = sorted(vectorlist,key=lambda l: l.distance_to(vectorlist[-1]))
+    vectorlist = unique(vectorlist)
+    futurelines = []
+    for zed in vectorlist:
+        if Inbox(zed,addedsegment):
+            for box in linesinline:
+                if XInbox(zed,box):
+                    break
+            else:
+                futurelines.append(zed)
+    possiblelines = []
+    possiblelines.extend(list(zip(futurelines[::2],futurelines[1::2])))
+    futurelines.reverse()
+    possiblelines.extend(list(zip(futurelines[::2],futurelines[1::2])))
+    newlines = []
+    for line in possiblelines:
+        if line[0] == line[1]:
+            continue
         if line in game.lines:
-            game.lines.remove(line)
+            continue
+        if (line[1],line[0]) in game.lines:
+            continue
+        if line in newlines:
+            continue
+        if (line[1],line[0]) in newlines:
+            continue
+        newlines.append(line)
+    return newlines
 
     #Order points, from point in bbx new line and no other bbox to next point that is the same.
 
-    return lines
+def Inbox(point,box):
+    if not min(box[0].x,box[1].x) <= point.x <= max(box[0].x,box[1].x):
+        return False
+    if not min(box[0].y,box[1].y) <= point.y <= max(box[0].y,box[1].y):
+        return False
+    return True
+def XInbox(point,box):
+    if not point.x == box[0].x == box[1].x:
+        if not min(box[0].x,box[1].x) < point.x < max(box[0].x,box[1].x):
+            return False
+    if not point.y == box[0].y == box[1].y:
+        if not min(box[0].y,box[1].y) < point.y < max(box[0].y,box[1].y):
+            return False
+    return True
 
 def OnScreenDebugger():
     font = pg.font.Font(None, 64)
@@ -192,6 +236,8 @@ def OnScreenDebugger():
     game.screen.blit(text, (0,0))
     text = font.render(str(round(game.clock.get_fps())), True, (5, 5, 5))
     game.screen.blit(text, (0,40))
+    text = font.render(str(len(game.lines)), True, (5, 5, 5))
+    game.screen.blit(text, (0,80))
 
 
 def sort_points_by_distance(point_1):
