@@ -45,21 +45,6 @@ def line_intersection(x1, y1, x2, y2, x3, y3, x4, y4):
     else:
         return None
 
-
-"""
-For each new point formed go out to each connected line making only right turns and only left turns. 
-If you have three points in a row which fall on a line abort. If you reach your starting point you have a polygon. Testing git
-"""
-# def find_closest_vector(sample_vector,vectors,clockwise):
-#     vectors.sort(key=lambda c: sample_vector.angle_to(c))
-#     return vectors #TEMP
-#     if clockwise:
-#         return vectors[0]
-#     if not clockwise:
-#         return vectors[-1]
-# # def subtract_center(center_vector,vector_pairs):
-#     return [(vector1-center_vector,vector2-center_vector) for vector1, vector2 in vector_pairs]
-
 @dataclass
 class Game():
     screen: object
@@ -209,8 +194,6 @@ def DivideLines(lines):
     new_lines = list(filter(lambda k: k not in game.lines, new_lines))
     new_lines = list(filter(lambda k: (k[1],k[0]) not in game.lines, new_lines))
     return new_lines
-                
-
 
 def SubtractExistingSegments(lines):
     addedsegment = lines[0]
@@ -259,14 +242,13 @@ def SubtractExistingSegments(lines):
         newlines.append(line)
     return newlines
 
-    #Order points, from point in bbx new line and no other bbox to next point that is the same.
-
 def Inbox(point,box):
     if not min(box[0].x,box[1].x) <= point.x <= max(box[0].x,box[1].x):
         return False
     if not min(box[0].y,box[1].y) <= point.y <= max(box[0].y,box[1].y):
         return False
     return True
+
 def XInbox(point,box):
     if not point.x == box[0].x == box[1].x:
         if not min(box[0].x,box[1].x) < point.x < max(box[0].x,box[1].x):
@@ -285,25 +267,6 @@ def OnScreenDebugger():
     text = font.render(str(len(game.lines)), True, (5, 5, 5))
     game.screen.blit(text, (0,80))
 
-
-# def sort_points_by_distance(point_1):
-#     return lambda point_2: np.sqrt((point_1.x-point_2.x)**2+(point_1.y-point_2.y)**2)
-
-# def closet_point_to_corner(points):
-#     print(points)
-#     gamecorners = [Vec2(0,0),Vec2(0,SCREEN_HEIGHT),Vec2(SCREEN_WIDTH,0),Vec2(SCREEN_WIDTH,SCREEN_HEIGHT)]
-#     smallest_point = None
-#     smallest_point_distance = -1
-#     for point in points:
-#         distance_to_closet_corner = min([p.distance_to(point) for p in gamecorners])
-#         print("ffd")
-#         if distance_to_closet_corner < smallest_point_distance or smallest_point_distance == -1:
-#             smallest_point = point
-#             smallest_point_distance = distance_to_closet_corner
-#     return smallest_point
-#     # return smallest_point
-    
-
 def unique(input_list):
     """Returns the unique elements of a list"""
     empty_list = []
@@ -311,40 +274,6 @@ def unique(input_list):
         if item not in empty_list:
             empty_list.append(item)
     return empty_list
-
-# def check_valid_line(game, point):
-#     if (point, game.selected_point) in game.lines or (game.selected_point,point) in game.lines:
-#         return False
-#     return True
-
-# def has_point(point):
-#     """Function to be used by filter() to easly check if a line contains a point"""
-#     return lambda k: point in k
-
-# def standerdize_line(line):
-#     """Sorts line so the points are always in order of distance from (0,0) or the top left"""
-#     point_1, point_2 = line
-#     if sum(point_1) < sum(point_2):
-#         return (point_1,point_2)
-#     else:
-#         return (point_2,point_1)
-
-# def sortlines(point):
-#     return lambda line: max([(point.distance_to(line[0]),point.distance_to(line[0]))])*(line[0]-point+line[0]-point).normalize()
-
-# def float_between(number, bound1, bound2):
-#     if bound2 < bound1:
-#         bound1, bound2 = bound2, bound1
-#     return number == np.clip(number,bound1,bound2) 
-
-
-# def point_in_bbox(point, bbox):
-#     if not float_between(point.x,bbox[0].x,bbox[1].x):
-#         return False
-#     if not float_between(point.y,bbox[0].y,bbox[1].y):
-#         return False
-#     else:
-#         return True
 
 if __name__ == "__main__":
     game = init()
