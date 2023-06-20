@@ -10,20 +10,20 @@ import random
 
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 500
-BACKGROUND_COLOR = pg.Color(200,180,200)
+BACKGROUND_COLOR = pg.Color("#FFFFFF")
 FRAMERATE = 60
 GAME_WIDTH = 5
 GAME_HEIGHT = 5
 DOT_SPACING = 80
 DOT_RADIUS = 4
-DOT_COLOR = pg.Color(100,50,140,a=255)
+DOT_COLOR = pg.Color("#D52D00")
 SNAP_RANGE_COLOR = pg.Color(pg.Vector3(200,180,180)-pg.Vector3(25))
-DOT_NEAR_COLOR = pg.Color(230,90,180)
-DOT_SLECTED_COLOR = pg.Color(230,200,180)
-TEMP_LINE_COLOR = pg.Color(60,10,30)
+DOT_NEAR_COLOR = pg.Color("#EF7627")
+DOT_SLECTED_COLOR = pg.Color("#FF9A56")
+TEMP_LINE_COLOR = pg.Color("#D162A4")
 MOUSE_SNAP_DISTANCE = DOT_SPACING//2
 LINE_THICKNESS = 3
-LINE_COLOR = pg.Color(10,60,80)
+LINE_COLOR = pg.Color("#B55690")
 
 pg.mixer.init()
 
@@ -50,15 +50,15 @@ def line_intersection(x1, y1, x2, y2, x3, y3, x4, y4):
 For each new point formed go out to each connected line making only right turns and only left turns. 
 If you have three points in a row which fall on a line abort. If you reach your starting point you have a polygon. Testing git
 """
-def find_closest_vector(sample_vector,vectors,clockwise):
-    vectors.sort(key=lambda c: sample_vector.angle_to(c))
-    return vectors #TEMP
-    if clockwise:
-        return vectors[0]
-    if not clockwise:
-        return vectors[-1]
-def subtract_center(center_vector,vector_pairs):
-    return [(vector1-center_vector,vector2-center_vector) for vector1, vector2 in vector_pairs]
+# def find_closest_vector(sample_vector,vectors,clockwise):
+#     vectors.sort(key=lambda c: sample_vector.angle_to(c))
+#     return vectors #TEMP
+#     if clockwise:
+#         return vectors[0]
+#     if not clockwise:
+#         return vectors[-1]
+# # def subtract_center(center_vector,vector_pairs):
+#     return [(vector1-center_vector,vector2-center_vector) for vector1, vector2 in vector_pairs]
 
 @dataclass
 class Game():
@@ -80,6 +80,25 @@ class Game():
     add_line: bool = False
     draw_temp_line: bool = False
     selected_point: object = None
+
+# class Line():
+#     def __init__(self,p1,p2) -> None:
+#         self.p1 = p1
+#         self.p2 = p2
+#     def __eq__(self, __value: object) -> bool:
+#         if type(__value) == Line:
+#             if self.p1 == __value.p1:
+#                 if self.p2 == __value.p2:
+#                     return True
+#                 else:
+#                     return False
+#             elif self.p1 == __value.p2:
+#                 if self.p2 == __value.p1:
+#                     return True
+#                 else:
+#                     return False
+#             else:
+#                 return False
 
 def init():
     pg.init()
@@ -118,15 +137,16 @@ def RenderLines():
     if game.selected_point: # Temporary Line
         for point in game.game_dots:
             if point.distance_to(game.mouse_cords) < MOUSE_SNAP_DISTANCE:
-                pg.draw.line(game.screen,TEMP_LINE_COLOR,game.selected_point,point,LINE_THICKNESS)
+                pg.draw.aaline(game.screen,TEMP_LINE_COLOR,game.selected_point,point,LINE_THICKNESS)
                 break
         else:
-            pg.draw.line(game.screen,TEMP_LINE_COLOR,game.selected_point,game.mouse_cords,LINE_THICKNESS)
+            pg.draw.aaline(game.screen,TEMP_LINE_COLOR,game.selected_point,game.mouse_cords,LINE_THICKNESS)
 
     for line in game.lines:
-        random.seed(line[0].magnitude()*line[1].x)
-        color_local = pg.Color(pg.Vector3(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
-        pg.draw.line(game.screen,color_local, *line, LINE_THICKNESS)
+        color_local = LINE_COLOR
+        # random.seed(line[0].magnitude()*line[1].x)
+        # color_local = pg.Color(pg.Vector3(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
+        pg.draw.aaline(game.screen,color_local, *line, LINE_THICKNESS)
     
 def RenderPoints():
     for point in game.game_dots:
@@ -164,17 +184,30 @@ def AddLine():
     new_lines = SubtractExistingSegments(new_lines)
     new_lines = DivideLines(new_lines)
     game.lines.extend(new_lines)
+    if len(new_lines) == 0:
+        return False
     return True
 
 def DivideLines(lines):
     new_lines = []
+    lines_to_be_removed = []
     for nline in lines:
         intersections = [*nline]
         for line in game.lines:
             if res := line_intersection(nline[0].x,nline[0].y,nline[1].x,nline[1].y,line[0].x,line[0].y,line[1].x,line[1].y):
+                print(res)
                 intersections.append(res)
+                lines_to_be_removed.append(line)
+                new_lines.append((res,line[0]))
+                new_lines.append((res,line[1]))
         intersections.sort(key=lambda l: l.distance_to(nline[0]))
+        intersections = unique(intersections)
         new_lines.extend(list(zip(intersections,intersections[1:])))
+    for line in lines_to_be_removed:
+        game.lines.remove(line)
+    new_lines = list(filter(lambda k: k[0] != k[1], new_lines))
+    new_lines = list(filter(lambda k: k not in game.lines, new_lines))
+    new_lines = list(filter(lambda k: (k[1],k[0]) not in game.lines, new_lines))
     return new_lines
                 
 
@@ -196,7 +229,7 @@ def SubtractExistingSegments(lines):
     for line in linesinline:
         vectorlist.extend(line)
     vectorlist.extend(addedsegment)
-    vectorlist = sorted(vectorlist,key=lambda l: l.distance_to(vectorlist[-1]))
+    vectorlist = sorted(vectorlist,key=lambda l: l.distance_to(vectorlist[0]))
     vectorlist = sorted(vectorlist,key=lambda l: l.distance_to(vectorlist[-1]))
     vectorlist = unique(vectorlist)
     futurelines = []
@@ -253,22 +286,22 @@ def OnScreenDebugger():
     game.screen.blit(text, (0,80))
 
 
-def sort_points_by_distance(point_1):
-    return lambda point_2: np.sqrt((point_1.x-point_2.x)**2+(point_1.y-point_2.y)**2)
+# def sort_points_by_distance(point_1):
+#     return lambda point_2: np.sqrt((point_1.x-point_2.x)**2+(point_1.y-point_2.y)**2)
 
-def closet_point_to_corner(points):
-    print(points)
-    gamecorners = [Vec2(0,0),Vec2(0,SCREEN_HEIGHT),Vec2(SCREEN_WIDTH,0),Vec2(SCREEN_WIDTH,SCREEN_HEIGHT)]
-    smallest_point = None
-    smallest_point_distance = -1
-    for point in points:
-        distance_to_closet_corner = min([p.distance_to(point) for p in gamecorners])
-        print("ffd")
-        if distance_to_closet_corner < smallest_point_distance or smallest_point_distance == -1:
-            smallest_point = point
-            smallest_point_distance = distance_to_closet_corner
-    return smallest_point
-    # return smallest_point
+# def closet_point_to_corner(points):
+#     print(points)
+#     gamecorners = [Vec2(0,0),Vec2(0,SCREEN_HEIGHT),Vec2(SCREEN_WIDTH,0),Vec2(SCREEN_WIDTH,SCREEN_HEIGHT)]
+#     smallest_point = None
+#     smallest_point_distance = -1
+#     for point in points:
+#         distance_to_closet_corner = min([p.distance_to(point) for p in gamecorners])
+#         print("ffd")
+#         if distance_to_closet_corner < smallest_point_distance or smallest_point_distance == -1:
+#             smallest_point = point
+#             smallest_point_distance = distance_to_closet_corner
+#     return smallest_point
+#     # return smallest_point
     
 
 def unique(input_list):
@@ -279,39 +312,39 @@ def unique(input_list):
             empty_list.append(item)
     return empty_list
 
-def check_valid_line(game, point):
-    if (point, game.selected_point) in game.lines or (game.selected_point,point) in game.lines:
-        return False
-    return True
+# def check_valid_line(game, point):
+#     if (point, game.selected_point) in game.lines or (game.selected_point,point) in game.lines:
+#         return False
+#     return True
 
-def has_point(point):
-    """Function to be used by filter() to easly check if a line contains a point"""
-    return lambda k: point in k
+# def has_point(point):
+#     """Function to be used by filter() to easly check if a line contains a point"""
+#     return lambda k: point in k
 
-def standerdize_line(line):
-    """Sorts line so the points are always in order of distance from (0,0) or the top left"""
-    point_1, point_2 = line
-    if sum(point_1) < sum(point_2):
-        return (point_1,point_2)
-    else:
-        return (point_2,point_1)
+# def standerdize_line(line):
+#     """Sorts line so the points are always in order of distance from (0,0) or the top left"""
+#     point_1, point_2 = line
+#     if sum(point_1) < sum(point_2):
+#         return (point_1,point_2)
+#     else:
+#         return (point_2,point_1)
 
-def sortlines(point):
-    return lambda line: max([(point.distance_to(line[0]),point.distance_to(line[0]))])*(line[0]-point+line[0]-point).normalize()
+# def sortlines(point):
+#     return lambda line: max([(point.distance_to(line[0]),point.distance_to(line[0]))])*(line[0]-point+line[0]-point).normalize()
 
-def float_between(number, bound1, bound2):
-    if bound2 < bound1:
-        bound1, bound2 = bound2, bound1
-    return number == np.clip(number,bound1,bound2) 
+# def float_between(number, bound1, bound2):
+#     if bound2 < bound1:
+#         bound1, bound2 = bound2, bound1
+#     return number == np.clip(number,bound1,bound2) 
 
 
-def point_in_bbox(point, bbox):
-    if not float_between(point.x,bbox[0].x,bbox[1].x):
-        return False
-    if not float_between(point.y,bbox[0].y,bbox[1].y):
-        return False
-    else:
-        return True
+# def point_in_bbox(point, bbox):
+#     if not float_between(point.x,bbox[0].x,bbox[1].x):
+#         return False
+#     if not float_between(point.y,bbox[0].y,bbox[1].y):
+#         return False
+#     else:
+#         return True
 
 if __name__ == "__main__":
     game = init()
@@ -331,7 +364,7 @@ if __name__ == "__main__":
                         SELECT_SOUND.play()
                 case "line":
                     if AddLine():
-                        SELECT_SOUND.play()
+                        # SELECT_SOUND.play()
                         LINE_SOUND.play()
                     game.selected_point = None
                 case "polygon":
