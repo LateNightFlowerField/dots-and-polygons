@@ -183,7 +183,6 @@ def DivideLines(lines):
         intersections = [*nline]
         for line in game.lines:
             if res := line_intersection(nline[0].x,nline[0].y,nline[1].x,nline[1].y,line[0].x,line[0].y,line[1].x,line[1].y):
-                print(res)
                 intersections.append(res)
                 lines_to_be_removed.append(line)
                 new_lines.append((res,line[0]))
@@ -294,9 +293,12 @@ if __name__ == "__main__":
                 case "point":
                     if AddPoint():
                         SELECT_SOUND.play()
+                        if DEBUG:
+                            print("Added Point")
                 case "line":
                     if AddLine():
-                        # SELECT_SOUND.play()
+                        if DEBUG:
+                            print("Added Line(s)")
                         LINE_SOUND.play()
                     game.selected_point = None
                 case "polygon":
