@@ -8,7 +8,7 @@ from dataclasses import field
 from typing import Union, List
 import random
 import logging
-from itertools import chain, pairwise
+from itertools import chain, pairwise, filterfalse
 
 DEBUG = False
 
@@ -223,19 +223,18 @@ def SubtractExistingSegments(lines):
     futurelines.reverse()
     possiblelines.extend(list(zip(futurelines[::2],futurelines[1::2])))
     newlines = []
-    #   possiblelines = filter(lambda l: l[0] != l[1], possiblelines)
-    #   possiblelines = filter(lambda l: l not in game.lines, possiblelines)
-    #   possiblelines = filter(lambda l: l not in newlines, possiblelines)
-    #   possiblelines = filter(lambda l: (l[1],l[0]) not in game.lines, possiblelines)
-    #   possiblelines = filter(lambda l: (l[1],l[0]) not in newlines, possiblelines)
+
+    possiblelines = filterfalse(lambda l: l[0] == l[1], possiblelines)
+    possiblelines= filterfalse(lambda l: l in game.lines, possiblelines)
+    possiblelines = filterfalse(lambda l: (l[1],l[0]) in game.lines, possiblelines)
+
     for line in possiblelines:
-        if line[0] == line[1]:
+        if line in newlines:
             continue
-        if line in game.lines or line in newlines:
-            continue
-        if (line[1],line[0]) in game.lines or (line[1],line[0]) in newlines:
+        if (line[1],line[0]) in newlines:
             continue
         newlines.append(line)
+    print(newlines)
     return newlines
 
 def Inbox(point,box):
