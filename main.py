@@ -50,22 +50,12 @@ def line_intersection(x1, y1, x2, y2, x3, y3, x4, y4):
 @dataclass
 class Game():
     screen: object
-    line_layer: object
-    dot_layer: object
     clock: object
     running: bool
-    check_polygon: bool
     game_dots: list
-    new_lines: list = field(default_factory=list)
     mouse_cords: object = None
-    new_intersections: list = field(default_factory=list)
     lines: list = field(default_factory=list)
-    checking_lines: list = field(default_factory=list)
-    last_line: list = field(default_factory=list)
     flags: list = field(default_factory=list)
-    add_point: bool = False
-    add_line: bool = False
-    draw_temp_line: bool = False
     selected_point: object = None
 
 # class Line():
@@ -91,18 +81,15 @@ def init():
     pg.init()
     pg.font.init()
     screen = pg.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
-    dots_layer = pg.Surface((SCREEN_WIDTH,SCREEN_HEIGHT))
-    line_layer = pg.Surface((SCREEN_WIDTH,SCREEN_HEIGHT))
     clock = pg.time.Clock()
     running = True
-    check_polygon = False
     game_dots = list()
     x_padding = (SCREEN_WIDTH-((GAME_WIDTH-1)*DOT_SPACING))//2
     y_padding = (SCREEN_HEIGHT-((GAME_HEIGHT-1)*DOT_SPACING))//2
     for x in range(GAME_WIDTH):
         for y in range(GAME_HEIGHT):
             game_dots.append(Vec2(x*DOT_SPACING+x_padding,y*DOT_SPACING+y_padding))
-    return Game(screen, dots_layer, line_layer, clock, running, check_polygon, game_dots)
+    return Game(screen, clock, running, game_dots)
 
 def EventHandeler():
     for event in pg.event.get(): #Handle Inputs
