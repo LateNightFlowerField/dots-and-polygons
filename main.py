@@ -220,13 +220,9 @@ def SubtractExistingSegments(lines):
     for line in possiblelines:
         if line[0] == line[1]:
             continue
-        if line in game.lines:
+        if line in game.lines or line in newlines:
             continue
-        if (line[1],line[0]) in game.lines:
-            continue
-        if line in newlines:
-            continue
-        if (line[1],line[0]) in newlines:
+        if (line[1],line[0]) in game.lines or (line[1],line[0]) in newlines:
             continue
         newlines.append(line)
     return newlines
