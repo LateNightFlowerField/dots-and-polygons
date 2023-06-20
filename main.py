@@ -8,6 +8,8 @@ from dataclasses import field
 from typing import Union, List
 import random
 
+DEBUG = False
+
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 500
 BACKGROUND_COLOR = pg.Color("#FFFFFF")
@@ -129,8 +131,9 @@ def RenderLines():
 
     for line in game.lines:
         color_local = LINE_COLOR
-        # random.seed(line[0].magnitude()*line[1].x)
-        # color_local = pg.Color(pg.Vector3(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
+        if DEBUG:
+            random.seed(line[0].magnitude()*line[1].x)
+            color_local = pg.Color(pg.Vector3(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
         pg.draw.aaline(game.screen,color_local, *line, LINE_THICKNESS)
     
 def RenderPoints():
@@ -300,8 +303,8 @@ if __name__ == "__main__":
                     pass
                 case _:
                     pass
-            
-        OnScreenDebugger()
+        if DEBUG:
+            OnScreenDebugger()
 
         game.flags = []
 
