@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from dataclasses import field
 from typing import Union, List
 import random
+import logging
+from itertools import chain, pairwise
 
 DEBUG = False
 
@@ -28,6 +30,8 @@ LINE_THICKNESS = 3
 LINE_COLOR = pg.Color("#B55690")
 
 pg.mixer.init()
+
+PLAY_MUSIC = False
 
 SELECT_SOUND = pg.mixer.Sound("point_selected.wav")
 LINE_SOUND = pg.mixer.Sound("line_added.wav")
@@ -57,6 +61,7 @@ class Game():
     lines: list = field(default_factory=list)
     flags: list = field(default_factory=list)
     selected_point: object = None
+    frames: int = 0
 
 # class Line():
 #     def __init__(self,p1,p2) -> None:
@@ -78,6 +83,7 @@ class Game():
 #                 return False
 
 def init():
+    logging.basicConfig(level=logging.CRITICAL, format=f"%(levelname)s: %(message)s")
     pg.init()
     pg.font.init()
     screen = pg.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
@@ -101,6 +107,9 @@ def EventHandeler():
                 game.flags.append("line")
             elif left:
                 game.flags.append("point")
+        if event.type == pg.MOUSEBUTTONUP:
+            if game.selected_point and game.selected_point.distance_to(game.mouse_cords) > MOUSE_SNAP_DISTANCE:
+                game.flags.append("line")
 
 def RenderNearCircle():
     for point in game.game_dots:
@@ -158,9 +167,9 @@ def AddLine():
         return False
     new_lines = SubtractExistingSegments(new_lines)
     new_lines = DivideLines(new_lines)
-    game.lines.extend(new_lines)
     if len(new_lines) == 0:
         return False
+    game.lines.extend(new_lines)
     return True
 
 def DivideLines(lines):
@@ -197,11 +206,9 @@ def SubtractExistingSegments(lines):
                 linesinline.append(line)
     if not linesinline:
         return lines 
-    vectorlist = []
-    for line in linesinline:
-        vectorlist.extend(line)
+    vectorlist = list(chain.from_iterable(linesinline))
     vectorlist.extend(addedsegment)
-    vectorlist = sorted(vectorlist,key=lambda l: l.distance_to(vectorlist[0]))
+    vectorlist = sorted(vectorlist,key=lambda l: l.distance_to(vectorlist[-1]))
     vectorlist = sorted(vectorlist,key=lambda l: l.distance_to(vectorlist[-1]))
     vectorlist = unique(vectorlist)
     futurelines = []
@@ -212,11 +219,15 @@ def SubtractExistingSegments(lines):
                     break
             else:
                 futurelines.append(zed)
-    possiblelines = []
-    possiblelines.extend(list(zip(futurelines[::2],futurelines[1::2])))
+    possiblelines = list(zip(futurelines[::2],futurelines[1::2]))
     futurelines.reverse()
     possiblelines.extend(list(zip(futurelines[::2],futurelines[1::2])))
     newlines = []
+    #   possiblelines = filter(lambda l: l[0] != l[1], possiblelines)
+    #   possiblelines = filter(lambda l: l not in game.lines, possiblelines)
+    #   possiblelines = filter(lambda l: l not in newlines, possiblelines)
+    #   possiblelines = filter(lambda l: (l[1],l[0]) not in game.lines, possiblelines)
+    #   possiblelines = filter(lambda l: (l[1],l[0]) not in newlines, possiblelines)
     for line in possiblelines:
         if line[0] == line[1]:
             continue
@@ -262,7 +273,8 @@ def unique(input_list):
 
 if __name__ == "__main__":
     game = init()
-    pg.mixer.music.play(-1)
+    if PLAY_MUSIC:
+        pg.mixer.music.play(-1)
     while game.running:
         game.screen.fill(BACKGROUND_COLOR)
         game.mouse_cords = pg.mouse.get_pos()
@@ -277,11 +289,11 @@ if __name__ == "__main__":
                     if AddPoint():
                         SELECT_SOUND.play()
                         if DEBUG:
-                            print("Added Point")
+                            logging.debug(f"Added Point at {game.selected_point}")
                 case "line":
                     if AddLine():
                         if DEBUG:
-                            print("Added Line(s)")
+                            logging.info("Added Line(s)")
                         LINE_SOUND.play()
                     game.selected_point = None
                 case "polygon":
@@ -295,4 +307,5 @@ if __name__ == "__main__":
 
         pg.display.update()
         game.clock.tick(FRAMERATE)
+        game.frames += 1
     pg.quit()
