@@ -119,7 +119,7 @@ def RenderLines():
     for line in game.lines:
         color_local = LINE_COLOR
         if DEBUG:
-            random.seed(line[0].magnitude()*line[1].x)
+            random.seed(id(line))
             color_local = pg.Color(pg.Vector3(random.randint(0,255), random.randint(0,255), random.randint(0,255)))
         pg.draw.aaline(game.screen,color_local, *line, LINE_THICKNESS)
     
