@@ -10,7 +10,7 @@ import random
 import logging
 from itertools import chain, pairwise, filterfalse
 
-DEBUG = False
+DEBUG = True
 
 SCREEN_WIDTH = 500
 SCREEN_HEIGHT = 500
@@ -83,7 +83,7 @@ class Game():
 #                 return False
 
 def init():
-    logging.basicConfig(level=logging.CRITICAL, format=f"%(levelname)s: %(message)s")
+    logging.basicConfig(level=logging.DEBUG, format=f"%(levelname)s: %(message)s")
     pg.init()
     pg.font.init()
     screen = pg.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
@@ -110,6 +110,9 @@ def EventHandeler():
         if event.type == pg.MOUSEBUTTONUP:
             if game.selected_point and game.selected_point.distance_to(game.mouse_cords) > MOUSE_SNAP_DISTANCE:
                 game.flags.append("line")
+        if event.type == pg.KEYDOWN:
+            for line in game.lines:
+                print(f"{line}, {line[0].x!r}, {line[0].y!r}, {line[1].x!r}, {line[1].y!r}")
 
 def RenderNearCircle():
     for point in game.game_dots:
@@ -143,6 +146,10 @@ def RenderPoints():
             continue
         pg.draw.circle(game.screen,DOT_COLOR,point,DOT_RADIUS)
 
+def AddPolygon():
+    operating_lines = DivideLines(game.lines)
+    print(operating_lines)
+
 def AddPoint():
     if game.selected_point:
         return False
@@ -166,7 +173,7 @@ def AddLine():
     if new_lines[0] in game.lines or (point2,point1) in game.lines:
         return False
     new_lines = SubtractExistingSegments(new_lines)
-    new_lines = DivideLines(new_lines)
+    # new_lines = DivideLines(new_lines)
     if len(new_lines) == 0:
         return False
     game.lines.extend(new_lines)
@@ -194,6 +201,7 @@ def DivideLines(lines):
     return new_lines
 
 def SubtractExistingSegments(lines):
+    logging.debug("Start of new line code")
     addedsegment = lines[0]
     adjustedline = (Vec2(0.0,0.0), addedsegment[1] - addedsegment[0])
     linesinline = []
@@ -211,6 +219,7 @@ def SubtractExistingSegments(lines):
     vectorlist = sorted(vectorlist,key=lambda l: l.distance_to(vectorlist[-1]))
     vectorlist = sorted(vectorlist,key=lambda l: l.distance_to(vectorlist[-1]))
     vectorlist = unique(vectorlist)
+    logging.debug(f"Ordered vectors {vectorlist}")
     futurelines = []
     for zed in vectorlist:
         if Inbox(zed,addedsegment):
@@ -219,38 +228,62 @@ def SubtractExistingSegments(lines):
                     break
             else:
                 futurelines.append(zed)
+        else:
+            logging.debug(f"Zed was a {type(zed)}")
+    logging.debug(f"After checking box {futurelines}")
     possiblelines = list(zip(futurelines[::2],futurelines[1::2]))
     futurelines.reverse()
     possiblelines.extend(list(zip(futurelines[::2],futurelines[1::2])))
-    newlines = []
-
+    logging.debug(f"Lines before removal {possiblelines}")
     possiblelines = filterfalse(lambda l: l[0] == l[1], possiblelines)
     possiblelines= filterfalse(lambda l: l in game.lines, possiblelines)
     possiblelines = filterfalse(lambda l: (l[1],l[0]) in game.lines, possiblelines)
-
+    newlines = []
     for line in possiblelines:
         if line in newlines:
             continue
         if (line[1],line[0]) in newlines:
             continue
         newlines.append(line)
-    print(newlines)
+    logging.debug(f"Lines to be added {newlines}")
     return newlines
 
 def Inbox(point,box):
+    logging.debug(f"Inbox: {point!r} | {box}")
     if not min(box[0].x,box[1].x) <= point.x <= max(box[0].x,box[1].x):
+        logging.debug(f"""
+          Inbox returns false due to x-axis miss:
+            - {box[0].x = !r}
+            - {box[1].x = !r}
+            - {point.x = !r}
+            - {box[0].x = !r}
+            - {box[1].x = !r}
+        """)
         return False
     if not min(box[0].y,box[1].y) <= point.y <= max(box[0].y,box[1].y):
-        return False
+        logging.debug(f"""
+          Inbox returns false due to y-axis miss:
+            - {box[0].y = !r}
+            - {box[1].y = !r}
+            - {point.y = !r}
+            - {box[0].y = !r}
+            - {box[1].y = !r}
+        """)
+        return False    
+    logging.debug("True")
     return True
 
 def XInbox(point,box):
+    logging.debug(f"XInbox: {point} | {box}")
     if not point.x == box[0].x == box[1].x:
         if not min(box[0].x,box[1].x) < point.x < max(box[0].x,box[1].x):
+            logging.debug("False")
             return False
     if not point.y == box[0].y == box[1].y:
         if not min(box[0].y,box[1].y) < point.y < max(box[0].y,box[1].y):
+            logging.debug("False")
             return False
+    logging.debug("True")
     return True
 
 def OnScreenDebugger():
@@ -296,7 +329,7 @@ if __name__ == "__main__":
                         LINE_SOUND.play()
                     game.selected_point = None
                 case "polygon":
-                    pass
+                    AddPolygon()
                 case _:
                     pass
         if DEBUG:
