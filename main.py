@@ -148,7 +148,9 @@ def RenderPoints():
 
 def AddPolygon():
     operating_lines = DivideLines(game.lines)
-    print(operating_lines)
+    for line in operating_lines:
+        print(f"Line: ({line[0].x!r},{line[0].y!r}), ({line[1].x!r},{line[1].y!r})")
+    print(f"Total of {len(operating_lines)} lines")
 
 def AddPoint():
     if game.selected_point:
@@ -192,13 +194,24 @@ def DivideLines(lines):
                 new_lines.append((res,line[1]))
         intersections.sort(key=lambda l: l.distance_to(nline[0]))
         intersections = unique(intersections)
-        new_lines.extend(list(zip(intersections,intersections[1:])))
-    for line in lines_to_be_removed:
-        game.lines.remove(line)
-    new_lines = list(filter(lambda k: k[0] != k[1], new_lines))
-    new_lines = list(filter(lambda k: k not in game.lines, new_lines))
-    new_lines = list(filter(lambda k: (k[1],k[0]) not in game.lines, new_lines))
-    return new_lines
+        ll = list(zip(intersections,intersections[1:]))
+        new_lines.extend(ll)
+    # for line in lines_to_be_removed:
+    #     game.lines.remove(line)
+    # new_lines = list(filter(lambda k: k[0] != k[1], new_lines))
+    # new_lines = unique(new_lines)
+    # # new_lines = list(filter(lambda k: k not in game.lines, new_lines))
+    # # new_lines = list(filter(lambda k: (k[1],k[0]) not in game.lines, new_lines))
+    emptl = []
+    for line in new_lines:
+        if line in emptl:
+            continue
+        if (line[1],line[0]) in emptl:
+            continue
+        if line[1] == line[0]:
+            continue
+        emptl.append(line)
+    return emptl
 
 def SubtractExistingSegments(lines):
     logging.debug("Start of new line code")
@@ -228,13 +241,9 @@ def SubtractExistingSegments(lines):
                     break
             else:
                 futurelines.append(zed)
-        else:
-            logging.debug(f"Zed was a {type(zed)}")
-    logging.debug(f"After checking box {futurelines}")
     possiblelines = list(zip(futurelines[::2],futurelines[1::2]))
     futurelines.reverse()
     possiblelines.extend(list(zip(futurelines[::2],futurelines[1::2])))
-    logging.debug(f"Lines before removal {possiblelines}")
     possiblelines = filterfalse(lambda l: l[0] == l[1], possiblelines)
     possiblelines= filterfalse(lambda l: l in game.lines, possiblelines)
     possiblelines = filterfalse(lambda l: (l[1],l[0]) in game.lines, possiblelines)
@@ -249,41 +258,19 @@ def SubtractExistingSegments(lines):
     return newlines
 
 def Inbox(point,box):
-    logging.debug(f"Inbox: {point!r} | {box}")
     if not min(box[0].x,box[1].x) <= point.x <= max(box[0].x,box[1].x):
-        logging.debug(f"""
-          Inbox returns false due to x-axis miss:
-            - {box[0].x = !r}
-            - {box[1].x = !r}
-            - {point.x = !r}
-            - {box[0].x = !r}
-            - {box[1].x = !r}
-        """)
         return False
     if not min(box[0].y,box[1].y) <= point.y <= max(box[0].y,box[1].y):
-        logging.debug(f"""
-          Inbox returns false due to y-axis miss:
-            - {box[0].y = !r}
-            - {box[1].y = !r}
-            - {point.y = !r}
-            - {box[0].y = !r}
-            - {box[1].y = !r}
-        """)
         return False    
-    logging.debug("True")
     return True
 
 def XInbox(point,box):
-    logging.debug(f"XInbox: {point} | {box}")
     if not point.x == box[0].x == box[1].x:
         if not min(box[0].x,box[1].x) < point.x < max(box[0].x,box[1].x):
-            logging.debug("False")
             return False
     if not point.y == box[0].y == box[1].y:
         if not min(box[0].y,box[1].y) < point.y < max(box[0].y,box[1].y):
-            logging.debug("False")
             return False
-    logging.debug("True")
     return True
 
 def OnScreenDebugger():
@@ -324,6 +311,7 @@ if __name__ == "__main__":
                             logging.debug(f"Added Point at {game.selected_point}")
                 case "line":
                     if AddLine():
+                        game.flags.append("polygon")
                         if DEBUG:
                             logging.info("Added Line(s)")
                         LINE_SOUND.play()
